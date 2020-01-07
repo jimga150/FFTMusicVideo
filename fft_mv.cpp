@@ -4,10 +4,33 @@ FFT_MV::FFT_MV()
 {
     Q_ASSERT(!this->background.isNull());
     
+    this->color_pool.push_back(QColor(201, 54, 160));
+    this->color_pool.push_back(QColor(254, 152, 225));
+    this->color_pool.push_back(QColor(124, 27, 96));
+    this->color_pool.push_back(QColor(141, 226, 99));
+    this->color_pool.push_back(QColor(99, 201, 115));
+    this->color_pool.push_back(QColor(186, 250, 127));
+    this->color_pool.push_back(QColor(Qt::white));
+    
     this->player.setMedia(QUrl::fromLocalFile(this->wav_path));
     
     QScreen* screen = this->screen();
     this->fps = screen->refreshRate();
+    
+    //must be sorted
+    this->transitions.push_back(color_transition(static_cast<uint>(20.646*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(35.298*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(46.497*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(50.199*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(50.666*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(51.126*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(51.603*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(52.077*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(52.738*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(53.552*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(54.499*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(55.259*this->fps)));
+    this->transitions.push_back(color_transition(static_cast<uint>(55.879*this->fps)));
     
     QRect screenRect = screen->availableGeometry();
     int screen_width = screenRect.width();
@@ -35,7 +58,7 @@ FFT_MV::FFT_MV()
     
     this->ui_rect = QRect(QPoint(0, 0), window_size);
     this->setGeometry(QRect(fullscreen_offset, window_size));
-    
+        
     fftw::maxthreads = static_cast<uint>(get_max_threads());
     
     
@@ -58,7 +81,7 @@ FFT_MV::FFT_MV()
     
     this->bar_width = this->ui_rect.width()*1.0/(this->num_bars*this->bar_separation_factor);  
     
-    this->pen = QPen(QBrush(QColor(201, 54, 160)), this->bar_width, Qt::SolidLine, Qt::RoundCap);
+    this->pen = QPen(QBrush(this->color_pool.at(this->old_color_index)), this->bar_width, Qt::SolidLine, Qt::RoundCap);
     
     
     uint numsamples = static_cast<uint>(audioFile.getNumSamplesPerChannel());
@@ -130,13 +153,31 @@ void FFT_MV::render(QPainter &painter){
     for (uint i = 0; i < this->num_bars; ++i){
         
         int x = static_cast<int>((i+0.5)*this->bar_width*this->bar_separation_factor);
-        int y = screen_height - qMax(static_cast<int>(fft[i]), static_cast<int>(this->last_val_coeff*last_fft[i]));
+        int y = qMax(static_cast<int>(fft[i]), static_cast<int>(this->last_val_coeff*last_fft[i]));
         
-        painter.drawLine(x, screen_height, x, y);
+        painter.drawLine(x, screen_height, x, screen_height - y);
     }
 }
 
 void FFT_MV::doGameStep(){
     double current_pos_s = this->player.position()*1.0/1000.0;
     this->current_window = static_cast<uint>(this->windows_per_second*current_pos_s);
+    
+    for (uint c = 0; c < this->transitions.size(); ++c){
+        color_transition ct = this->transitions.at(c);
+        if (ct.window_index <= this->current_window && !ct.done){
+            
+            ulong new_color_index = this->old_color_index;
+            while (new_color_index == this->old_color_index){
+                new_color_index = static_cast<ulong>(this->rng.bounded(0, static_cast<int>(this->color_pool.size())));
+            }
+            
+            this->pen.setColor(this->color_pool.at(new_color_index));
+            
+            this->transitions.at(c).done = true;
+            break;
+        } else if (ct.window_index > this->current_window){
+            break;
+        }
+    }
 }

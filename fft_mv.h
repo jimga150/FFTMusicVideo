@@ -16,6 +16,15 @@ using namespace utils;
 using namespace Array;
 using namespace fftwpp;
 
+struct color_transition{
+    uint window_index;
+    bool done = false;
+    
+    color_transition(uint w){
+        this->window_index = w;
+    }
+};
+
 class FFT_MV : public OpenGL2DWindow
 {
 public:
@@ -31,11 +40,11 @@ public:
     }
     
     
-    //QString wav_path = "/Users/jim/Desktop/Code/C_Cplusplus/FFT_MusicVideo/Threatened.wav";
-    QString wav_path = "/Users/jim/Desktop/Code/C_Cplusplus/FFT_MusicVideo/Destroid_Crusaders.wav";
+    QString wav_path = "/Users/jim/Desktop/Code/C_Cplusplus/FFT_MusicVideo/Threatened.wav";
+    //QString wav_path = "/Users/jim/Desktop/Code/C_Cplusplus/FFT_MusicVideo/Destroid_Crusaders.wav";
     
     QMediaPlayer player;
-    
+        
     double fps;
         
     vector<double*> ffts;
@@ -53,6 +62,13 @@ public:
     double bar_width;
     
     QPen pen;
+    ulong old_color_index = 0;
+    
+    vector<QColor> color_pool;
+    
+    vector<color_transition> transitions;
+    
+    QRandomGenerator rng = QRandomGenerator::securelySeeded();
     
     QPixmap background = QPixmap("/Users/jim/Desktop/Code/C_Cplusplus/FFT_MusicVideo/threatened.jpg");
     
