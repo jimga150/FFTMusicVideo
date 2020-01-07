@@ -68,6 +68,7 @@ FFT_MV::FFT_MV()
     printf("Calculating windows\n");
     fflush(stdout);
     
+    double max_magnitude = -__DBL_MAX__;
     for (uint w = 0; w < num_windows; ++w){
         
         array1<Complex> f(samples_per_window, sizeof(Complex));
@@ -89,9 +90,20 @@ FFT_MV::FFT_MV()
         for(uint b = 0; b < this->num_bars; b++){
             int bint = static_cast<int>(b);
             fft_result_arr[b] = qMax(0.0, qLn(this->magnitude(f[bint]))/this->log_denom);
+            
+            if (fft_result_arr[b] > max_magnitude) max_magnitude = fft_result_arr[b];
         }
         
         this->ffts.push_back(fft_result_arr);
+    }
+    
+    double desired_max = this->ui_rect.height()/2;
+    double mag_coeff = desired_max/max_magnitude;
+    
+    for (double* fft : this->ffts){
+        for (uint i = 0; i < this->num_bars; ++i){
+            fft[i] *= mag_coeff;
+        }
     }
     
     this->player.play();
