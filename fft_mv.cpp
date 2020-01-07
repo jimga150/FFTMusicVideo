@@ -88,7 +88,7 @@ FFT_MV::FFT_MV()
         double* fft_result_arr = new double[this->num_bars];
         for(uint b = 0; b < this->num_bars; b++){
             int bint = static_cast<int>(b);
-            fft_result_arr[b] = 200*qLn(this->magnitude(f[bint]))/this->log_denom;
+            fft_result_arr[b] = qMax(0.0, qLn(this->magnitude(f[bint]))/this->log_denom);
         }
         
         this->ffts.push_back(fft_result_arr);
