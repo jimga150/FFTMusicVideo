@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/audio">
+        <file>Threatened.mp3</file>
+        <file>Threatened.wav</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file>threatened.jpg</file>
+    </qresource>
+</RCC>
