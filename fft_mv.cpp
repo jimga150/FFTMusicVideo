@@ -120,8 +120,8 @@ FFT_MV::FFT_MV()
         this->ffts.push_back(fft_result_arr);
     }
     
-    double desired_max = this->ui_rect.height()/2;
-    double mag_coeff = desired_max/max_magnitude;
+    this->max_fft_value = this->ui_rect.height()/2;
+    double mag_coeff = this->max_fft_value/max_magnitude;
     
     for (double* fft : this->ffts){
         for (uint i = 0; i < this->num_bars; ++i){

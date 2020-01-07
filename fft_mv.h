@@ -3,6 +3,7 @@
 
 #include <QMediaPlayer>
 #include <QtMath>
+#include <QRandomGenerator>
 
 #include "fftwpp/Array.h"
 #include "fftwpp/fftw++.h"
@@ -78,9 +79,11 @@ public:
     
     const double bar_separation_factor = 1.2;
     
-    const double last_val_coeff = 0.8;
-    
+    const double last_val_coeff = 0.9;
+        
     const uint bar_multiplier = 4;
+    
+    double max_fft_value;
 };
 
 #endif // FFT_MV_H
