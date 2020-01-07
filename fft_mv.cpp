@@ -123,7 +123,7 @@ void FFT_MV::render(QPainter &painter){
     painter.drawPixmap(this->ui_rect, this->background);
     
     double* fft = this->ffts.at(this->current_window); 
-    double* last_fft = this->ffts.at(this->current_window == 0 ? 0 : this->current_window);
+    double* last_fft = this->ffts.at(this->current_window == 0 ? 0 : this->current_window-1);
     
     int screen_height = this->ui_rect.height();
     
