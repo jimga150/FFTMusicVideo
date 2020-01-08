@@ -16,6 +16,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += TIME_FRAMES
 #DEFINES += TIME_FRAME_COMPS
 
+INCLUDEPATH += "libgwavi/"
+
 msvc {
     INCLUDEPATH += "E:\msys64\home\user\fftw-3.3.5\mingw64\include"
     LIBS += -L"E:\msys64\home\user\fftw-3.3.5\mingw64\bin" -lfftw3f-3 -lfftw3-3
@@ -27,10 +29,14 @@ macx {
 }
 
 SOURCES += opengl2dwindow.cpp \
+        QAviWriter.cpp \
         fft_mv.cpp \
         fftwpp/Complex.cc \
         fftwpp/convolution.cc \
         fftwpp/fftw++.cc \
+        libgwavi/avi-utils.c \
+        libgwavi/fileio.c \
+        libgwavi/gwavi.c \
         main.cpp
 
 # Default rules for deployment.
@@ -40,6 +46,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += opengl2dwindow.h \
     AudioFile.h \
+    #QAviWriter.h \
+    QAviWriter.h \
     fft_mv.h \ \
     fftwpp/Array.h \
     fftwpp/Complex.h \
@@ -49,7 +57,11 @@ HEADERS += opengl2dwindow.h \
     fftwpp/fftw++.h \
     fftwpp/seconds.h \
     fftwpp/statistics.h \
-    fftwpp/transposeoptions.h
+    fftwpp/transposeoptions.h \
+    libgwavi/avi-utils.h \
+    libgwavi/fileio.h \
+    libgwavi/gwavi.h \
+    libgwavi/gwavi_private.h
 
 RESOURCES += \
     Resources.qrc

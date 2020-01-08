@@ -12,8 +12,6 @@ FFT_MV::FFT_MV()
     this->color_pool.push_back(QColor(186, 250, 127));
     this->color_pool.push_back(QColor(Qt::white));
     
-    this->player.setMedia(QUrl::fromLocalFile(this->wav_path));
-    
     QScreen* screen = this->screen();
     this->fps = screen->refreshRate();
     
@@ -57,8 +55,16 @@ FFT_MV::FFT_MV()
     }
     
     this->ui_rect = QRect(QPoint(0, 0), window_size);
-    this->setGeometry(QRect(fullscreen_offset, window_size));
-        
+    
+    if (this->savetoVideo){
+        this->videoWriter = new QAviWriter("/Users/jim/Desktop/fft_movie.avi", this->ui_rect.size(), static_cast<uint>(this->fps));
+        this->videoWriter->setAudioFileName(this->wav_path);
+        bool opened = this->videoWriter->open();
+        Q_ASSERT(opened);
+    } else {
+        this->setGeometry(QRect(fullscreen_offset, window_size));
+    }
+    
     fftw::maxthreads = static_cast<uint>(get_max_threads());
     
     
@@ -129,39 +135,69 @@ FFT_MV::FFT_MV()
         }
     }
     
-    this->player.play();
+    if (!this->savetoVideo){
+        this->player.setMedia(QUrl::fromLocalFile(this->wav_path));
+        this->player.play();
+        connect(&this->player, &QMediaPlayer::stateChanged, this, &QWindow::close);
+    }
 }
 
 FFT_MV::~FFT_MV(){
     for (double* arr : this->ffts){
         delete []  arr;
     }
+    if (this->videoWriter){
+        bool closed = this->videoWriter->close();
+        Q_ASSERT(closed);
+        delete this->videoWriter;
+    }
 }
 
 void FFT_MV::render(QPainter &painter){
     
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(this->pen);
-    
-    painter.drawPixmap(this->ui_rect, this->background);
-    
-    double* fft = this->ffts.at(this->current_window); 
-    double* last_fft = this->ffts.at(this->current_window == 0 ? 0 : this->current_window-1);
-    
-    int screen_height = this->ui_rect.height();
-    
-    for (uint i = 0; i < this->num_bars; ++i){
+    if (this->savetoVideo){
         
-        int x = static_cast<int>((i+0.5)*this->bar_width*this->bar_separation_factor);
-        int y = qMax(static_cast<int>(fft[i]), static_cast<int>(this->last_val_coeff*last_fft[i]));
+        QImage frame(this->ui_rect.size(), QImage::Format_ARGB32);
+        QPainter p(&frame);
         
-        painter.drawLine(x, screen_height, x, screen_height - y);
+        this->savetoVideo = false;
+        this->render(p);
+        this->savetoVideo = true;
+        
+        p.end();
+        this->videoWriter->addFrame(frame);
+        
+    } else {
+        
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(this->pen);
+        
+        painter.drawPixmap(this->ui_rect, this->background);
+        
+        double* fft = this->ffts.at(this->current_window); 
+        double* last_fft = this->ffts.at(this->current_window == 0 ? 0 : this->current_window-1);
+        
+        int screen_height = this->ui_rect.height();
+        
+        for (uint i = 0; i < this->num_bars; ++i){
+            
+            int x = static_cast<int>((i+0.5)*this->bar_width*this->bar_separation_factor);
+            int y = qMax(static_cast<int>(fft[i]), static_cast<int>(this->last_val_coeff*last_fft[i]));
+            
+            painter.drawLine(x, screen_height, x, screen_height - y);
+        }
     }
 }
 
 void FFT_MV::doGameStep(){
-    double current_pos_s = this->player.position()*1.0/1000.0;
-    this->current_window = static_cast<uint>(this->windows_per_second*current_pos_s);
+    
+    if (this->savetoVideo){
+        this->current_window++;
+        if (this->current_window >= this->ffts.size()) this->close();
+    } else {
+        double current_pos_s = this->player.position()*1.0/1000.0;
+        this->current_window = static_cast<uint>(this->windows_per_second*current_pos_s);
+    }
     
     for (uint c = 0; c < this->transitions.size(); ++c){
         color_transition ct = this->transitions.at(c);
