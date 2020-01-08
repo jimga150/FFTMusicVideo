@@ -48,7 +48,7 @@ public:
     QMediaPlayer player;
     
     QAviWriter* videoWriter = nullptr;
-    bool savetoVideo = true;
+    bool savetoVideo = false;
     
     double fps;
     
